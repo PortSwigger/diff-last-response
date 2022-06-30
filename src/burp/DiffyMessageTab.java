@@ -1,9 +1,7 @@
 package burp;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
-import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
@@ -62,7 +60,9 @@ public class DiffyMessageTab implements IMessageEditorTab {
         if (content == null) {
             changed = false;
         } else {
-            textEditor.setText(Utilities.helpers.bytesToString(content));
+            if(currentMessage != content) {
+                textEditor.setText(Utilities.helpers.bytesToString(content));
+            }
         }
         currentMessage = content;
     }
