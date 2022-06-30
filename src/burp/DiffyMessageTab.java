@@ -1,6 +1,7 @@
 package burp;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -27,6 +28,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
                         diffyContainer.removeAll();
                         textEditor.setLineWrap(true);
                         textEditor.setEditable(false);
+                        textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
                         try {
                             Theme theme = Theme.load(getClass().getResourceAsStream(
                                     "/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
