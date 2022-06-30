@@ -17,7 +17,6 @@ public class DiffyMessageTab implements IMessageEditorTab {
     private RTextScrollPane scrollPane = new RTextScrollPane(textEditor);
 
     private byte[] currentMessage;
-    private Boolean changed = false;
 
     public DiffyMessageTab() {
         diffyContainer.addComponentListener(new ComponentAdapter() {
@@ -58,9 +57,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
 
     @Override
     public void setMessage(byte[] content, boolean isRequest) {
-        if (content == null) {
-            changed = false;
-        } else {
+        if (content != null) {
             if(currentMessage != content) {
                 textEditor.setText(Utilities.helpers.bytesToString(content));
             }
