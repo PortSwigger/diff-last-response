@@ -22,16 +22,23 @@ public class DiffyMessageTab implements IMessageEditorTab {
     private String green = "#28a745";
 
     private byte[] currentMessage;
+    private byte[] lastMessage;
+    private Boolean componentShown = false;
 
     public DiffyMessageTab() {
         diffyContainer.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
+                if(componentShown) {
+                    return;
+                }
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                         diffyContainer.removeAll();
                         textEditor.setLineWrap(true);
                         textEditor.setEditable(false);
+                        scrollPane.setAutoscrolls(true);
+
                         try {
                             Theme theme = Theme.load(getClass().getResourceAsStream(
                                     "/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
@@ -41,6 +48,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
                         diffyContainer.add(scrollPane);
                     }
                 });
+                componentShown = true;
             }
         });
     }
@@ -62,31 +70,35 @@ public class DiffyMessageTab implements IMessageEditorTab {
 
     @Override
     public void setMessage(byte[] content, boolean isRequest) {
-        if (content != null) {
+        if(isRequest) {
+           return;
+        }
+        if (content != null && content.length > 0) {
             if(currentMessage != content) {
-                byte[] lastResponse = BurpExtender.response1 == content ? BurpExtender.response2 : BurpExtender.response1;
                 textEditor.setText(Utilities.helpers.bytesToString(content));
-                if(lastResponse != null && lastResponse != content) {
+                textEditor.removeAllLineHighlights();
+                if(lastMessage != null && lastMessage != content && lastMessage.length > 0) {
                     try {
                         BufferedReader reader1 = new BufferedReader(new StringReader(Utilities.helpers.bytesToString(content)));
-                        BufferedReader reader2 = new BufferedReader(new StringReader(Utilities.helpers.bytesToString(lastResponse)));
+                        BufferedReader reader2 = new BufferedReader(new StringReader(Utilities.helpers.bytesToString(lastMessage)));
 
                         String line1;
                         String line2;
-                        int lineNumber = 1;
-                        while ((line1 = reader1.readLine()) != null && (line2 = reader2.readLine()) != null)
-                        {
-                            if (!line1.equals(line2))
-                            {
+                        int lineNumber = 0;
+                        while ((line1 = reader1.readLine()) != null && (line2 = reader2.readLine()) != null) {
+                            if (!line1.equals(line2)) {
                                 textEditor.addLineHighlight(lineNumber, Color.decode(red));
                             }
                             lineNumber++;
                         }
                     } catch (BadLocationException e) {
+                        Utilities.err("Bad location:" + e);
                     } catch (IOException e) {
+                        Utilities.err("IO error:" + e);
                     }
                 }
             }
+            lastMessage = currentMessage;
         }
         currentMessage = content;
     }
