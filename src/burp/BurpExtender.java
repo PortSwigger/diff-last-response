@@ -12,10 +12,11 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, IMe
     @Override
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
         new Utilities(callbacks, new HashMap<>(), name);
-        Utilities.out("Loaded " + name + " v" + version);
         callbacks.setExtensionName(name);
-        Utilities.callbacks.registerExtensionStateListener(this);
+        Utilities.callbacks.registerHttpListener(this);
         Utilities.callbacks.registerMessageEditorTabFactory(this);
+        Utilities.callbacks.registerExtensionStateListener(this);
+        Utilities.out("Loaded " + name + " v" + version);
     }
 
     @Override
