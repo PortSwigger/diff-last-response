@@ -6,6 +6,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -38,7 +39,8 @@ public class DiffyMessageTab implements IMessageEditorTab {
                         textEditor.setLineWrap(true);
                         textEditor.setEditable(false);
                         scrollPane.setAutoscrolls(true);
-
+                        DefaultCaret caret = (DefaultCaret) textEditor.getCaret();
+                        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
                         try {
                             Theme theme = Theme.load(getClass().getResourceAsStream(
                                     "/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
