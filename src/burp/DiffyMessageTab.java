@@ -21,7 +21,6 @@ public class DiffyMessageTab implements IMessageEditorTab {
     private final JPanel diffyContainer = new JPanel(new BorderLayout());
     private RSyntaxTextArea textEditor = new RSyntaxTextArea(20, 60);
     private RTextScrollPane scrollPane = new RTextScrollPane(textEditor);
-    private RSyntaxTextAreaHighlighter highlighter = new RSyntaxTextAreaHighlighter();
     private String red = "#dc3545";
     private String green = "#28a745";
     private String blue = "#0d6efd";
