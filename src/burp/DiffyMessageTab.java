@@ -2,7 +2,6 @@ package burp;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;
-import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.Patch;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaHighlighter;
