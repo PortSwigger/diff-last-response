@@ -43,6 +43,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
                         diffyContainer.removeAll();
                         textEditor.setLineWrap(true);
                         textEditor.setEditable(false);
+                        textEditor.setAntiAliasingEnabled(true);
                         scrollPane.setAutoscrolls(true);
                         DefaultCaret caret = (DefaultCaret) textEditor.getCaret();
                         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
@@ -91,7 +92,6 @@ public class DiffyMessageTab implements IMessageEditorTab {
                     Patch<String> patch = DiffUtils.diff(previousResponse, currentResponse);
 
                     for (AbstractDelta<String> delta : patch.getDeltas()) {
-                        Utilities.out("Patch:" + delta);
                         switch (delta.getType()) {
                             case CHANGE:
                                 try {
@@ -107,7 +107,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
                                 break;
                             case DELETE:
                                 try {
-                                    int pos = delta.getSource().getPosition();
+                                    int pos = delta.getTarget().getPosition();
                                     textEditor.addLineHighlight(pos, Color.decode(red));
                                 } catch (BadLocationException e) {
 
