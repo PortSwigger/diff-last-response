@@ -7,6 +7,7 @@ repositories {
 dependencies {
     implementation 'net.portswigger.burp.extender:burp-extender-api:2.3'
     implementation 'com.fifesoft:rsyntaxtextarea:3.1.1'
+    implementation "io.github.java-diff-utils:java-diff-utils:4.11"
     implementation files('albinowaxUtils-all.jar')
 }
 
