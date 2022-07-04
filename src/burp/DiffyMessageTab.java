@@ -87,7 +87,6 @@ public class DiffyMessageTab implements IMessageEditorTab {
                     java.util.List<String> previousResponse  = Arrays.asList(Utilities.helpers.bytesToString(lastMessage).split("\\r?\\n"));
 
                     Patch<String> patch = DiffUtils.diff(previousResponse, currentResponse);
-
                     for (AbstractDelta<String> delta : patch.getDeltas()) {
                         switch (delta.getType()) {
                             case CHANGE:
@@ -95,7 +94,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
                                     int pos = delta.getTarget().getPosition();
                                     int size = delta.getTarget().size();
                                     textEditor.addLineHighlight(pos, Color.decode(blue));
-                                    for(int i = pos; i<pos + size;i++) {
+                                    for(int i = pos; i < pos + size;i++) {
                                         textEditor.addLineHighlight(i, Color.decode(blue));
                                     }
                                 } catch (BadLocationException e) {
