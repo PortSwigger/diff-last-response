@@ -27,6 +27,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
     private byte[] currentMessage;
     private byte[] lastMessage;
     private Boolean componentShown = false;
+    private final int MAX_BYTES = 1000000;
 
     public DiffyMessageTab() {
         diffyContainer.addComponentListener(new ComponentAdapter() {
@@ -40,7 +41,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
                         diffyContainer.removeAll();
                         textEditor.setLineWrap(true);
                         textEditor.setEditable(false);
-                        textEditor.setAntiAliasingEnabled(true);
+                        textEditor.setAntiAliasingEnabled(false);
                         scrollPane.setAutoscrolls(true);
                         DefaultCaret caret = (DefaultCaret) textEditor.getCaret();
                         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
@@ -80,6 +81,13 @@ public class DiffyMessageTab implements IMessageEditorTab {
         }
         if (content != null && content.length > 0) {
             if(currentMessage != content) {
+
+                if(content.length > MAX_BYTES) {
+                    textEditor.setText("Response is too large to diff");
+                    return;
+                }
+
+
                 textEditor.setText(Utilities.helpers.bytesToString(content));
                 textEditor.removeAllLineHighlights();
                 if(lastMessage != null && lastMessage != content && lastMessage.length > 0) {

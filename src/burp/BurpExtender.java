@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class BurpExtender implements IBurpExtender, IExtensionStateListener, IMessageEditorTabFactory {
     private static final String name = "Diffy";
-    private static final String version = "1.0.0";
+    private static final String version = "1.0.1";
 
     @Override
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
