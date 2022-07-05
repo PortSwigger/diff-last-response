@@ -2,6 +2,7 @@ package burp;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;
+import com.github.difflib.patch.DeltaType;
 import com.github.difflib.patch.Patch;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Theme;
@@ -10,13 +11,15 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class DiffyMessageTab implements IMessageEditorTab {
+public class DiffMessageTab implements IMessageEditorTab {
     private final JPanel diffyContainer = new JPanel(new BorderLayout());
     private RSyntaxTextArea textEditor = new RSyntaxTextArea(20, 60);
     private RTextScrollPane scrollPane = new RTextScrollPane(textEditor);
@@ -29,7 +32,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
     private Boolean componentShown = false;
     private final int MAX_BYTES = 1000000;
 
-    public DiffyMessageTab() {
+    public DiffMessageTab() {
         diffyContainer.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -61,7 +64,7 @@ public class DiffyMessageTab implements IMessageEditorTab {
 
     @Override
     public String getTabCaption() {
-        return "Diffy";
+        return "Diff";
     }
 
     @Override
@@ -87,46 +90,42 @@ public class DiffyMessageTab implements IMessageEditorTab {
                     return;
                 }
 
-
                 textEditor.setText(Utilities.helpers.bytesToString(content));
                 textEditor.removeAllLineHighlights();
                 if(lastMessage != null && lastMessage != content && lastMessage.length > 0) {
-                    java.util.List<String> currentResponse = Arrays.asList(Utilities.helpers.bytesToString(content).split("\\r?\\n"));
-                    java.util.List<String> previousResponse  = Arrays.asList(Utilities.helpers.bytesToString(lastMessage).split("\\r?\\n"));
+                    java.util.List<String> currentResponse = Arrays.asList(Utilities.helpers.bytesToString(content).split("\\n"));
+                    java.util.List<String> previousResponse  = Arrays.asList(Utilities.helpers.bytesToString(lastMessage).split("\\n"));
+                    Highlighter highlighter = textEditor.getHighlighter();
 
                     Patch<String> patch = DiffUtils.diff(previousResponse, currentResponse);
                     for (AbstractDelta<String> delta : patch.getDeltas()) {
                         switch (delta.getType()) {
-                            case CHANGE:
-                                try {
-                                    int pos = delta.getTarget().getPosition();
-                                    int size = delta.getTarget().size();
-                                    textEditor.addLineHighlight(pos, Color.decode(blue));
-                                    for(int i = pos; i < pos + size;i++) {
-                                        textEditor.addLineHighlight(i, Color.decode(blue));
-                                    }
-                                } catch (BadLocationException e) {
-
-                                }
-                                break;
-                            case DELETE:
-                                try {
-                                    int pos = delta.getTarget().getPosition();
-                                    textEditor.addLineHighlight(pos, Color.decode(red));
-                                } catch (BadLocationException e) {
-
-                                }
-                                break;
                             case INSERT:
-                                try {
-                                    int pos = delta.getTarget().getPosition();
-                                    int size = delta.getTarget().size();
-                                    textEditor.addLineHighlight(pos, Color.decode(green));
-                                    for(int i = pos; i < pos + size;i++) {
-                                        textEditor.addLineHighlight(i, Color.decode(green));
+                            case CHANGE:
+                                java.util.List<String> sourceLines = delta.getSource().getLines();
+                                java.util.List<String> targetLines = delta.getTarget().getLines();
+                                int linePos = delta.getTarget().getPosition();
+                                int pos = 0;
+                                for(int i=0;i<linePos;i++) {
+                                    pos += currentResponse.get(i).length() + 1;
+                                }
+                                for(int i=0;i<targetLines.size();i++) {
+                                    Patch<String> linePatch = DiffUtils.diffInline(String.join("\n", sourceLines), String.join("\n", targetLines));
+                                    for (AbstractDelta<String> lineDelta : linePatch.getDeltas()) {
+                                        if (lineDelta.getTarget().getLines() == null) {
+                                            continue;
+                                        }
+                                        if (lineDelta.getTarget().getLines().size() == 0) {
+                                            continue;
+                                        }
+                                        int startPos = pos + lineDelta.getTarget().getPosition();
+                                        int endPos = startPos + lineDelta.getTarget().getLines().get(0).length();
+                                        if (lineDelta.getType() == DeltaType.CHANGE) {
+                                            addHighlight(Color.decode(blue), startPos, endPos, highlighter);
+                                        } else if (lineDelta.getType() == DeltaType.INSERT) {
+                                            addHighlight(Color.decode(green), startPos, endPos, highlighter);
+                                        }
                                     }
-                                } catch (BadLocationException e) {
-
                                 }
                                 break;
                         }
@@ -140,6 +139,15 @@ public class DiffyMessageTab implements IMessageEditorTab {
     @Override
     public byte[] getMessage() {
         return currentMessage;
+    }
+
+    private void addHighlight(Color colour, int startPos, int endPos, Highlighter highlighter) {
+        try {
+            Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(colour);
+            highlighter.addHighlight(startPos, endPos, painter);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

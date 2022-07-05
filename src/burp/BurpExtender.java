@@ -3,8 +3,8 @@ package burp;
 import java.util.HashMap;
 
 public class BurpExtender implements IBurpExtender, IExtensionStateListener, IMessageEditorTabFactory {
-    private static final String name = "Diffy";
-    private static final String version = "1.0.2";
+    private static final String name = "Diff last response";
+    private static final String version = "1.0.3";
 
     @Override
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
@@ -22,6 +22,6 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, IMe
 
     @Override
     public IMessageEditorTab createNewInstance(IMessageEditorController controller, boolean editable) {
-        return new DiffyMessageTab();
+        return new DiffMessageTab();
     }
 }
