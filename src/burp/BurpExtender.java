@@ -22,6 +22,6 @@ public class BurpExtender implements IBurpExtender, IExtensionStateListener, IMe
 
     @Override
     public IMessageEditorTab createNewInstance(IMessageEditorController controller, boolean editable) {
-        return new DiffMessageTab();
+        return new DiffMessageTab(controller);
     }
 }

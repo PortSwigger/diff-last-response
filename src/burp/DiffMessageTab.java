@@ -29,10 +29,15 @@ public class DiffMessageTab implements IMessageEditorTab {
 
     private byte[] currentMessage;
     private byte[] lastMessage;
+    private int lastPort;
+    private String lastHost;
+    private String lastProtocol;
     private Boolean componentShown = false;
     private final int MAX_BYTES = 1000000;
+    private IMessageEditorController controller;
 
-    public DiffMessageTab() {
+    public DiffMessageTab(IMessageEditorController controller) {
+        this.controller = controller;
         diffyContainer.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -83,8 +88,12 @@ public class DiffMessageTab implements IMessageEditorTab {
            return;
         }
         if (content != null && content.length > 0) {
-            if(currentMessage != content) {
 
+            int currentPort = controller.getHttpService().getPort();
+            String currentHost = controller.getHttpService().getHost();
+            String currentProtocol = controller.getHttpService().getProtocol();
+
+            if(currentMessage != content) {
                 if(content.length > MAX_BYTES) {
                     textEditor.setText("Response is too large to diff");
                     return;
@@ -92,7 +101,7 @@ public class DiffMessageTab implements IMessageEditorTab {
 
                 textEditor.setText(Utilities.helpers.bytesToString(content));
                 textEditor.removeAllLineHighlights();
-                if(lastMessage != null && lastMessage != content && lastMessage.length > 0) {
+                if(isLastService(currentPort, currentHost, currentProtocol) && lastMessage != null && lastMessage != content && lastMessage.length > 0) {
                     java.util.List<String> currentResponse = Arrays.asList(Utilities.helpers.bytesToString(content).split("\\n"));
                     java.util.List<String> previousResponse  = Arrays.asList(Utilities.helpers.bytesToString(lastMessage).split("\\n"));
                     Highlighter highlighter = textEditor.getHighlighter();
@@ -133,6 +142,9 @@ public class DiffMessageTab implements IMessageEditorTab {
                 }
             }
             lastMessage = currentMessage;
+            lastPort = controller.getHttpService().getPort();
+            lastHost = controller.getHttpService().getHost();
+            lastProtocol = controller.getHttpService().getProtocol();
         }
         currentMessage = content;
     }
@@ -153,6 +165,10 @@ public class DiffMessageTab implements IMessageEditorTab {
     @Override
     public boolean isModified() {
         return false;
+    }
+
+    public boolean isLastService(int currentPort, String currentHost, String currentProtocol) {
+        return currentPort == lastPort && currentHost == lastHost && currentProtocol == lastProtocol;
     }
 
     @Override
