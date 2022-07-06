@@ -2,7 +2,6 @@ package burp;
 
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;
-import com.github.difflib.patch.DeltaType;
 import com.github.difflib.patch.Patch;
 import com.github.difflib.text.DiffRowGenerator;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -20,6 +19,7 @@ import java.awt.event.ComponentEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DiffMessageTab implements IMessageEditorTab {
     private final JPanel diffyContainer = new JPanel(new BorderLayout());
@@ -59,11 +59,14 @@ public class DiffMessageTab implements IMessageEditorTab {
                         scrollPane.setAutoscrolls(true);
                         DefaultCaret caret = (DefaultCaret) textEditor.getCaret();
                         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-                        try {
-                            Theme theme = Theme.load(getClass().getResourceAsStream(
-                                    "/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
-                            theme.apply(textEditor);
-                        } catch (IOException ioe) {
+
+                        if(UIManager.getLookAndFeel().getID().contains("Dar")) {
+                            try {
+                                Theme theme = Theme.load(getClass().getResourceAsStream(
+                                        "/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
+                                theme.apply(textEditor);
+                            } catch (IOException ioe) {
+                            }
                         }
                         diffyContainer.add(scrollPane);
                     }
@@ -111,11 +114,17 @@ public class DiffMessageTab implements IMessageEditorTab {
                     java.util.List<String> currentResponse = Arrays.asList(Utilities.helpers.bytesToString(content).split("\\n"));
                     java.util.List<String> previousResponse  = Arrays.asList(Utilities.helpers.bytesToString(lastMessage).split("\\n"));
                     Highlighter highlighter = textEditor.getHighlighter();
-
                     Patch<String> patch = DiffUtils.diff(previousResponse, currentResponse);
                     List<AbstractDelta<String>> deltas = patch.getDeltas();
                     for (AbstractDelta<String> delta : deltas) {
                         switch (delta.getType()) {
+                            case DELETE:
+                                try {
+                                    textEditor.addLineHighlight(delta.getTarget().getPosition(), Color.decode(red));
+                                } catch (BadLocationException e) {
+
+                                }
+                                break;
                             case INSERT:
                                 try {
                                     textEditor.addLineHighlight(delta.getTarget().getPosition(), Color.decode(green));
@@ -127,15 +136,20 @@ public class DiffMessageTab implements IMessageEditorTab {
                                 int linePos = delta.getTarget().getPosition();
                                 int pos = 0;
                                 for (int i = 0; i < linePos; i++) {
-                                    pos += currentResponse.get(i).length() + 1;
+                                    pos += linePos == 0 ? 0 : currentResponse.get(i).length() + 1;
                                 }
                                 int finalPos = pos;
+                                AtomicInteger counter = new AtomicInteger();
                                 DiffRowGenerator generator = DiffRowGenerator.create()
                                         .showInlineDiffs(true)
                                         .mergeOriginalRevised(true)
                                         .inlineDiffByWord(true)
                                         .lineNormalizer(f -> f)
                                         .processDiffs(diff-> {
+                                            if(counter.get() == 1) {
+                                                return diff;
+                                            }
+                                            counter.getAndIncrement();
                                             String line = currentResponse.get(linePos);
                                             int foundPos = line.indexOf(diff);
                                             if(foundPos != -1) {
@@ -150,6 +164,14 @@ public class DiffMessageTab implements IMessageEditorTab {
                                 generator.generateDiffRows(
                                         delta.getSource().getLines(),
                                         delta.getTarget().getLines());
+
+                                for(int i=delta.getSource().getLines().size();i<delta.getTarget().getLines().size();i++){
+                                    try {
+                                        textEditor.addLineHighlight(i, Color.decode(green));
+                                    } catch (BadLocationException e) {
+
+                                    }
+                                }
                                 break;
                         }
                     }
