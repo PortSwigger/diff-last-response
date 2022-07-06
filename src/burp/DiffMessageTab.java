@@ -19,7 +19,6 @@ import java.awt.event.ComponentEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class DiffMessageTab implements IMessageEditorTab {
     private final JPanel diffyContainer = new JPanel(new BorderLayout());
