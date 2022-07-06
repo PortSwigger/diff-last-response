@@ -4,6 +4,7 @@ import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.DeltaType;
 import com.github.difflib.patch.Patch;
+import com.github.difflib.text.DiffRowGenerator;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -116,33 +117,39 @@ public class DiffMessageTab implements IMessageEditorTab {
                     for (AbstractDelta<String> delta : deltas) {
                         switch (delta.getType()) {
                             case INSERT:
+                                try {
+                                    textEditor.addLineHighlight(delta.getTarget().getPosition(), Color.decode(green));
+                                } catch (BadLocationException e) {
+
+                                }
+                                break;
                             case CHANGE:
-                                java.util.List<String> sourceLines = delta.getSource().getLines();
-                                java.util.List<String> targetLines = delta.getTarget().getLines();
                                 int linePos = delta.getTarget().getPosition();
                                 int pos = 0;
                                 for (int i = 0; i < linePos; i++) {
                                     pos += currentResponse.get(i).length() + 1;
                                 }
-                                for (int i = 0; i < targetLines.size(); i++) {
-                                    Patch<String> linePatch = DiffUtils.diffInline(String.join("\n", sourceLines), String.join("\n", targetLines));
-                                    List<AbstractDelta<String>> lineDeltas = linePatch.getDeltas();
-                                    for (AbstractDelta<String> lineDelta : lineDeltas) {
-                                        if (lineDelta.getTarget().getLines() == null) {
-                                            continue;
-                                        }
-                                        if (lineDelta.getTarget().getLines().size() == 0) {
-                                            continue;
-                                        }
-                                        int startPos = pos + lineDelta.getTarget().getPosition();
-                                        int endPos = startPos + lineDelta.getTarget().getLines().get(0).length();
-                                        if (lineDelta.getType() == DeltaType.CHANGE) {
-                                            addHighlight(startPos, endPos, highlighter, modifiedPainter);
-                                        } else if (lineDelta.getType() == DeltaType.INSERT) {
-                                            addHighlight(startPos, endPos, highlighter, insertPainter);
-                                        }
-                                    }
-                                }
+                                int finalPos = pos;
+                                DiffRowGenerator generator = DiffRowGenerator.create()
+                                        .showInlineDiffs(true)
+                                        .mergeOriginalRevised(true)
+                                        .inlineDiffByWord(true)
+                                        .lineNormalizer(f -> f)
+                                        .processDiffs(diff-> {
+                                            String line = currentResponse.get(linePos);
+                                            int foundPos = line.indexOf(diff);
+                                            if(foundPos != -1) {
+                                                int start = finalPos + foundPos;
+                                                int end = start + diff.length();
+                                                addHighlight(start, end, highlighter, modifiedPainter);
+                                            }
+                                            return diff;
+                                        })
+                                        .build();
+
+                                generator.generateDiffRows(
+                                        delta.getSource().getLines(),
+                                        delta.getTarget().getLines());
                                 break;
                         }
                     }
@@ -158,35 +165,6 @@ public class DiffMessageTab implements IMessageEditorTab {
     @Override
     public byte[] getMessage() {
         return currentMessage;
-    }
-
-    private void addLineHighlight(AbstractDelta<String> delta) {
-        switch (delta.getType()) {
-            case CHANGE:
-                try {
-                    int pos = delta.getTarget().getPosition();
-                    int size = delta.getTarget().size();
-                    textEditor.addLineHighlight(pos, Color.decode(blue));
-                    for (int i = pos; i < pos + size; i++) {
-                        textEditor.addLineHighlight(i, Color.decode(blue));
-                    }
-                } catch (BadLocationException e) {
-
-                }
-                break;
-            case INSERT:
-                try {
-                    int pos = delta.getTarget().getPosition();
-                    int size = delta.getTarget().size();
-                    textEditor.addLineHighlight(pos, Color.decode(green));
-                    for (int i = pos; i < pos + size; i++) {
-                        textEditor.addLineHighlight(i, Color.decode(green));
-                    }
-                } catch (BadLocationException e) {
-
-                }
-                break;
-        }
     }
 
     private void addHighlight(int startPos, int endPos, Highlighter highlighter, Highlighter.HighlightPainter painter) {
