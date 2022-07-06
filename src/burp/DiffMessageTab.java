@@ -18,22 +18,27 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 public class DiffMessageTab implements IMessageEditorTab {
     private final JPanel diffyContainer = new JPanel(new BorderLayout());
     private RSyntaxTextArea textEditor = new RSyntaxTextArea(20, 60);
     private RTextScrollPane scrollPane = new RTextScrollPane(textEditor);
+
     private String red = "#dc3545";
     private String green = "#28a745";
     private String blue = "#0d6efd";
 
+    private Highlighter.HighlightPainter insertPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.decode(green));
+    private Highlighter.HighlightPainter modifiedPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.decode(blue));
+    private Highlighter.HighlightPainter deletePainter = new DefaultHighlighter.DefaultHighlightPainter(Color.decode(red));
     private byte[] currentMessage;
     private byte[] lastMessage;
     private int lastPort;
     private String lastHost;
     private String lastProtocol;
     private Boolean componentShown = false;
-    private final int MAX_BYTES = 1000000;
+    private final int MAX_BYTES = 750000;
     private IMessageEditorController controller;
 
     public DiffMessageTab(IMessageEditorController controller) {
@@ -107,7 +112,8 @@ public class DiffMessageTab implements IMessageEditorTab {
                     Highlighter highlighter = textEditor.getHighlighter();
 
                     Patch<String> patch = DiffUtils.diff(previousResponse, currentResponse);
-                    for (AbstractDelta<String> delta : patch.getDeltas()) {
+                    List<AbstractDelta<String>> deltas = patch.getDeltas();
+                    for (AbstractDelta<String> delta : deltas) {
                         switch (delta.getType()) {
                             case INSERT:
                             case CHANGE:
@@ -115,12 +121,13 @@ public class DiffMessageTab implements IMessageEditorTab {
                                 java.util.List<String> targetLines = delta.getTarget().getLines();
                                 int linePos = delta.getTarget().getPosition();
                                 int pos = 0;
-                                for(int i=0;i<linePos;i++) {
+                                for (int i = 0; i < linePos; i++) {
                                     pos += currentResponse.get(i).length() + 1;
                                 }
-                                for(int i=0;i<targetLines.size();i++) {
+                                for (int i = 0; i < targetLines.size(); i++) {
                                     Patch<String> linePatch = DiffUtils.diffInline(String.join("\n", sourceLines), String.join("\n", targetLines));
-                                    for (AbstractDelta<String> lineDelta : linePatch.getDeltas()) {
+                                    List<AbstractDelta<String>> lineDeltas = linePatch.getDeltas();
+                                    for (AbstractDelta<String> lineDelta : lineDeltas) {
                                         if (lineDelta.getTarget().getLines() == null) {
                                             continue;
                                         }
@@ -130,9 +137,9 @@ public class DiffMessageTab implements IMessageEditorTab {
                                         int startPos = pos + lineDelta.getTarget().getPosition();
                                         int endPos = startPos + lineDelta.getTarget().getLines().get(0).length();
                                         if (lineDelta.getType() == DeltaType.CHANGE) {
-                                            addHighlight(Color.decode(blue), startPos, endPos, highlighter);
+                                            addHighlight(startPos, endPos, highlighter, modifiedPainter);
                                         } else if (lineDelta.getType() == DeltaType.INSERT) {
-                                            addHighlight(Color.decode(green), startPos, endPos, highlighter);
+                                            addHighlight(startPos, endPos, highlighter, insertPainter);
                                         }
                                     }
                                 }
@@ -153,9 +160,37 @@ public class DiffMessageTab implements IMessageEditorTab {
         return currentMessage;
     }
 
-    private void addHighlight(Color colour, int startPos, int endPos, Highlighter highlighter) {
+    private void addLineHighlight(AbstractDelta<String> delta) {
+        switch (delta.getType()) {
+            case CHANGE:
+                try {
+                    int pos = delta.getTarget().getPosition();
+                    int size = delta.getTarget().size();
+                    textEditor.addLineHighlight(pos, Color.decode(blue));
+                    for (int i = pos; i < pos + size; i++) {
+                        textEditor.addLineHighlight(i, Color.decode(blue));
+                    }
+                } catch (BadLocationException e) {
+
+                }
+                break;
+            case INSERT:
+                try {
+                    int pos = delta.getTarget().getPosition();
+                    int size = delta.getTarget().size();
+                    textEditor.addLineHighlight(pos, Color.decode(green));
+                    for (int i = pos; i < pos + size; i++) {
+                        textEditor.addLineHighlight(i, Color.decode(green));
+                    }
+                } catch (BadLocationException e) {
+
+                }
+                break;
+        }
+    }
+
+    private void addHighlight(int startPos, int endPos, Highlighter highlighter, Highlighter.HighlightPainter painter) {
         try {
-            Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(colour);
             highlighter.addHighlight(startPos, endPos, painter);
         } catch (BadLocationException e) {
             e.printStackTrace();
@@ -168,7 +203,10 @@ public class DiffMessageTab implements IMessageEditorTab {
     }
 
     public boolean isLastService(int currentPort, String currentHost, String currentProtocol) {
-        return currentPort == lastPort && currentHost == lastHost && currentProtocol == lastProtocol;
+        if(lastPort == 0 || lastHost == null || lastProtocol == null) {
+            return true;
+        }
+        return currentPort == lastPort && currentHost.equals(lastHost) && currentProtocol.equals(lastProtocol);
     }
 
     @Override

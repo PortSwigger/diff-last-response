@@ -3,8 +3,8 @@ package burp;
 import java.util.HashMap;
 
 public class BurpExtender implements IBurpExtender, IExtensionStateListener, IMessageEditorTabFactory {
-    private static final String name = "Diff last response";
-    private static final String version = "1.0.3";
+    public static final String name = "Diff last response";
+    public static final String version = "1.0.4";
 
     @Override
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
