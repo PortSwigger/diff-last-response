@@ -139,17 +139,12 @@ public class DiffMessageTab implements IMessageEditorTab {
                                     pos += currentResponse.get(i).length() + 1;
                                 }
                                 int finalPos = pos;
-                                AtomicInteger counter = new AtomicInteger();
                                 DiffRowGenerator generator = DiffRowGenerator.create()
                                         .showInlineDiffs(true)
                                         .mergeOriginalRevised(true)
                                         .inlineDiffByWord(true)
                                         .lineNormalizer(f -> f)
                                         .processDiffs(diff-> {
-                                            if(counter.get() == 1) {
-                                                return diff;
-                                            }
-                                            counter.getAndIncrement();
                                             String line = currentResponse.get(linePos);
                                             int foundPos = line.indexOf(diff);
                                             if(foundPos != -1) {
