@@ -136,7 +136,7 @@ public class DiffMessageTab implements IMessageEditorTab {
                                 int linePos = delta.getTarget().getPosition();
                                 int pos = 0;
                                 for (int i = 0; i < linePos; i++) {
-                                    pos += linePos == 0 ? 0 : currentResponse.get(i).length() + 1;
+                                    pos += currentResponse.get(i).length() + 1;
                                 }
                                 int finalPos = pos;
                                 AtomicInteger counter = new AtomicInteger();
