@@ -144,12 +144,20 @@ public class DiffMessageTab implements IMessageEditorTab {
                                         .inlineDiffByWord(true)
                                         .lineNormalizer(f -> f)
                                         .processDiffs(diff-> {
-                                            String line = currentResponse.get(linePos);
-                                            int foundPos = line.indexOf(diff);
-                                            if(foundPos != -1) {
-                                                int start = finalPos + foundPos;
-                                                int end = start + diff.length();
-                                                addHighlight(start, end, highlighter, modifiedPainter);
+                                            List<String> targetLines = delta.getTarget().getLines();
+                                            int currentLinePos = finalPos;
+                                            for(int i=0;i<targetLines.size();i++) {
+                                                String line = targetLines.get(i);
+                                                int foundPos = line.indexOf(diff);
+                                                if (foundPos != -1) {
+                                                    int start = currentLinePos + foundPos;
+                                                    int end = start + diff.length();
+                                                    addHighlight(start, end, highlighter, modifiedPainter);
+                                                    Utilities.out("Diff:" + diff);
+                                                    break;
+                                                } else {
+                                                    currentLinePos += line.length() + 1;
+                                                }
                                             }
                                             return diff;
                                         })
