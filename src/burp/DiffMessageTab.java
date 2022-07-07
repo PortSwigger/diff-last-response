@@ -158,12 +158,14 @@ public class DiffMessageTab implements IMessageEditorTab {
                                 generator.generateDiffRows(
                                         delta.getSource().getLines(),
                                         delta.getTarget().getLines());
-
+                                int currentLine = linePos + 1;
                                 for(int i=delta.getSource().getLines().size();i<delta.getTarget().getLines().size();i++){
                                     try {
-                                        textEditor.addLineHighlight(i, Color.decode(green));
+                                        textEditor.addLineHighlight(currentLine, Color.decode(green));
                                     } catch (BadLocationException e) {
 
+                                    } finally {
+                                        currentLine++;
                                     }
                                 }
                                 break;
