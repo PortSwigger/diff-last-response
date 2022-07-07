@@ -153,7 +153,6 @@ public class DiffMessageTab implements IMessageEditorTab {
                                                     int start = currentLinePos + foundPos;
                                                     int end = start + diff.length();
                                                     addHighlight(start, end, highlighter, modifiedPainter);
-                                                    Utilities.out("Diff:" + diff);
                                                     break;
                                                 } else {
                                                     currentLinePos += line.length() + 1;
