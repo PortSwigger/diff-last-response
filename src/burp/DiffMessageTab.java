@@ -29,10 +29,7 @@ public class DiffMessageTab implements IMessageEditorTab {
     private String red = "#dc3545";
     private String green = "#28a745";
     private String blue = "#0d6efd";
-
-    private Highlighter.HighlightPainter insertPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.decode(green));
     private Highlighter.HighlightPainter modifiedPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.decode(blue));
-    private Highlighter.HighlightPainter deletePainter = new DefaultHighlighter.DefaultHighlightPainter(Color.decode(red));
     private byte[] currentMessage;
     private byte[] lastMessage;
     private int lastPort;
@@ -197,12 +194,12 @@ public class DiffMessageTab implements IMessageEditorTab {
                     }
                 }
             }
-            lastMessage = currentMessage;
-            lastPort = controller.getHttpService().getPort();
-            lastHost = controller.getHttpService().getHost();
-            lastProtocol = controller.getHttpService().getProtocol();
         }
         currentMessage = content;
+        lastMessage = currentMessage;
+        lastPort = controller.getHttpService().getPort();
+        lastHost = controller.getHttpService().getHost();
+        lastProtocol = controller.getHttpService().getProtocol();
     }
     @Override
     public byte[] getMessage() {
