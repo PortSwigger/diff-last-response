@@ -5,6 +5,7 @@ import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;
 import com.github.difflib.text.DiffRowGenerator;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -106,7 +107,20 @@ public class DiffMessageTab implements IMessageEditorTab {
                     textEditor.setText("Response is too large to diff");
                     return;
                 }
-
+                String contentType = Utilities.getHeader(content, "Content-Type").toLowerCase();
+                if(contentType.contains("json")) {
+                    textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
+                } else if(contentType.contains("html")) {
+                    textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
+                } else if(contentType.contains("javascript")) {
+                    textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
+                } else if(contentType.contains("css")) {
+                    textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CSS);
+                } else if(contentType.contains("xml")) {
+                    textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_XML);
+                } else {
+                    textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+                }
                 textEditor.setText(Utilities.helpers.bytesToString(content));
                 textEditor.removeAllLineHighlights();
                 if(isLastService(currentPort, currentHost, currentProtocol) && lastMessage != null && lastMessage != content && lastMessage.length > 0) {
