@@ -108,6 +108,9 @@ public class DiffMessageTab implements IMessageEditorTab {
                     return;
                 }
                 String contentType = Utilities.getHeader(content, "Content-Type").toLowerCase();
+                if(contentType.length() == 0) {
+                    contentType = Utilities.getHeader(content, "content-type").toLowerCase();
+                }
                 if(contentType.contains("json")) {
                     textEditor.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
                 } else if(contentType.contains("html")) {
