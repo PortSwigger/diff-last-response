@@ -183,7 +183,7 @@ public class DiffMessageTab implements IMessageEditorTab {
                                         delta.getSource().getLines(),
                                         delta.getTarget().getLines());
                                 int currentLine = linePos + 1;
-                                for(int i=delta.getSource().getLines().size();i<delta.getTarget().getLines().size();i++){
+                                for(int i=delta.getSource().getLines().size()-1;i<delta.getTarget().getLines().size();i++){
                                     try {
                                         textEditor.addLineHighlight(currentLine, Color.decode(green));
                                     } catch (BadLocationException e) {
