@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DiffMessageTab implements IMessageEditorTab {
-    private final JPanel diffyContainer = new JPanel(new BorderLayout());
+    private final JPanel diffContainer = new JPanel(new BorderLayout());
     private RSyntaxTextArea textEditor = new RSyntaxTextArea(20, 60);
     private RTextScrollPane scrollPane = new RTextScrollPane(textEditor);
 
@@ -31,17 +31,17 @@ public class DiffMessageTab implements IMessageEditorTab {
     private String blue = "#0d6efd";
     private Highlighter.HighlightPainter modifiedPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.decode(blue));
     private byte[] currentMessage;
-    private byte[] lastMessage;
-    private int lastPort;
-    private String lastHost;
-    private String lastProtocol;
     private Boolean componentShown = false;
     private final int MAX_BYTES = 750000;
     private IMessageEditorController controller;
+    private static byte[] lastMessage;
+    private static int lastPort;
+    private static String lastHost;
+    private static String lastProtocol;
 
     public DiffMessageTab(IMessageEditorController controller) {
         this.controller = controller;
-        diffyContainer.addComponentListener(new ComponentAdapter() {
+        diffContainer.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
                 if(componentShown) {
@@ -49,7 +49,7 @@ public class DiffMessageTab implements IMessageEditorTab {
                 }
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        diffyContainer.removeAll();
+                        diffContainer.removeAll();
                         textEditor.setLineWrap(true);
                         textEditor.setEditable(false);
                         textEditor.setAntiAliasingEnabled(false);
@@ -65,7 +65,7 @@ public class DiffMessageTab implements IMessageEditorTab {
                             } catch (IOException ioe) {
                             }
                         }
-                        diffyContainer.add(scrollPane);
+                        diffContainer.add(scrollPane);
                     }
                 });
                 componentShown = true;
@@ -80,7 +80,7 @@ public class DiffMessageTab implements IMessageEditorTab {
 
     @Override
     public Component getUiComponent() {
-        return diffyContainer;
+        return diffContainer;
     }
 
     @Override
@@ -98,6 +98,13 @@ public class DiffMessageTab implements IMessageEditorTab {
             int currentPort = controller.getHttpService().getPort();
             String currentHost = controller.getHttpService().getHost();
             String currentProtocol = controller.getHttpService().getProtocol();
+
+            if(lastMessage == null && lastProtocol == null && lastHost == null && lastPort == 0) {
+                lastMessage = BurpExtender.lastMessageFromListener;
+                lastHost = BurpExtender.lastHostFromListener;
+                lastProtocol = BurpExtender.lastProtocolFromListener;
+                lastPort = BurpExtender.lastPortFromListener;
+            }
 
             if(currentMessage != content) {
                 if(content.length > MAX_BYTES) {
@@ -123,7 +130,7 @@ public class DiffMessageTab implements IMessageEditorTab {
                 }
                 textEditor.setText(Utilities.helpers.bytesToString(content));
                 textEditor.removeAllLineHighlights();
-                if(isLastService(currentPort, currentHost, currentProtocol) && lastMessage != null && lastMessage != content && lastMessage.length > 0) {
+                if(isLastService(currentProtocol, currentHost, currentPort) && lastMessage != null && lastMessage != content && lastMessage.length > 0) {
                     java.util.List<String> currentResponse = Arrays.asList(Utilities.helpers.bytesToString(content).split("\\n"));
                     java.util.List<String> previousResponse  = Arrays.asList(Utilities.helpers.bytesToString(lastMessage).split("\\n"));
                     Highlighter highlighter = textEditor.getHighlighter();
@@ -140,7 +147,11 @@ public class DiffMessageTab implements IMessageEditorTab {
                                 break;
                             case INSERT:
                                 try {
-                                    textEditor.addLineHighlight(delta.getTarget().getPosition(), Color.decode(green));
+                                    int start = delta.getTarget().getPosition();
+                                    int end = start + delta.getTarget().getLines().size();
+                                    for(int i=start;i<end;i++) {
+                                        textEditor.addLineHighlight(i, Color.decode(green));
+                                    }
                                 } catch (BadLocationException e) {
 
                                 }
@@ -184,10 +195,8 @@ public class DiffMessageTab implements IMessageEditorTab {
                                     try {
                                         textEditor.addLineHighlight(currentLine, Color.decode(green));
                                     } catch (BadLocationException e) {
-
-                                    } finally {
-                                        currentLine++;
                                     }
+                                    currentLine++;
                                 }
                                 break;
                         }
@@ -195,11 +204,11 @@ public class DiffMessageTab implements IMessageEditorTab {
                 }
             }
         }
-        currentMessage = content;
-        lastMessage = currentMessage;
+        lastMessage = content;
         lastPort = controller.getHttpService().getPort();
         lastHost = controller.getHttpService().getHost();
         lastProtocol = controller.getHttpService().getProtocol();
+        currentMessage = content;
     }
     @Override
     public byte[] getMessage() {
@@ -219,7 +228,7 @@ public class DiffMessageTab implements IMessageEditorTab {
         return false;
     }
 
-    public boolean isLastService(int currentPort, String currentHost, String currentProtocol) {
+    public static boolean isLastService(String currentProtocol, String currentHost, int currentPort) {
         if(lastPort == 0 || lastHost == null || lastProtocol == null) {
             return true;
         }
