@@ -1,0 +1,13 @@
+Uuid: 902ef17f5aaa4f8eabe00491de3b241d
+ExtensionType: 1
+Name: Diff Last Response
+RepoName: diff-last-response
+ScreenVersion: 1.0.10
+SerialVersion: 3
+MinPlatformVersion: 0
+ProOnly: False
+Author: Gareth Heyes, PortSwigger
+ShortDescription: Shows the differences between two Repeater responses
+EntryPoint: build/libs/diffy-all.jar
+BuildCommand: ./gradlew fatJar
+SupportedProducts: Pro, Community
